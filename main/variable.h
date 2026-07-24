@@ -45,7 +45,7 @@ public:
   T get(size_t index) const {
     // Clamp index to valid range
     if (index >= N) {
-        index = N - 1;
+      index = N - 1;
     }
 
     xSemaphoreTake(mutex, portMAX_DELAY);

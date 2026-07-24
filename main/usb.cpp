@@ -166,12 +166,12 @@ void UsbSerial::handleGet(JsonDocument &doc) {
 
   // Run correct function based on location
   if (strcmp(doc["location"], "values") == 0) handleGetValues();
-  if (strcmp(doc["location"], "settings") == 0) handleGetSettings();
-  if (strcmp(doc["location"], "calibration") == 0) handleGetCalibration();
+  else if (strcmp(doc["location"], "settings") == 0) handleGetSettings();
+  else if (strcmp(doc["location"], "calibration") == 0) handleGetCalibration();
 #ifdef BATTERY_MONITORING
-  if (strcmp(doc["location"], "battery") == 0) handleGetBattery();
+  else if (strcmp(doc["location"], "battery") == 0) handleGetBattery();
 #endif
-  if (strcmp(doc["location"], "ping") == 0) handleGetPing();
+  else if (strcmp(doc["location"], "ping") == 0) handleGetPing();
 }
 
 // Handler to run relevant endpoint function on POST
@@ -190,8 +190,8 @@ void UsbSerial::handlePost(JsonDocument &doc) {
 
   // Run correct function based on location
   if (strcmp(doc["location"], "values") == 0) handlePostValues(doc);
-  if (strcmp(doc["location"], "settings") == 0) handlePostSettings(doc);
-  if (strcmp(doc["location"], "calibration") == 0) handlePostCalibration(doc);
+  else if (strcmp(doc["location"], "settings") == 0) handlePostSettings(doc);
+  else if (strcmp(doc["location"], "calibration") == 0) handlePostCalibration(doc);
 }
 
 // Enpoint for getting scanned values
