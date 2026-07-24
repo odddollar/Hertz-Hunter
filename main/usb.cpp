@@ -248,7 +248,7 @@ void UsbSerial::handlePostValues(JsonDocument &doc) {
   }
 
   // Update receiver lowband state
-  receiver->lowband.set(doc["payload"]["lowband"]);
+  receiver->setLowband(doc["payload"]["lowband"]);
 
   JsonDocument resp;
 
@@ -348,18 +348,18 @@ void UsbSerial::handlePostSettings(JsonDocument &doc) {
 
   // Apply valid updates
   if (doc["payload"]["scan_interval_index"].is<JsonVariant>()) {
-    settings->scanIntervalIndex.set(doc["payload"]["scan_interval_index"]);
+    settings->setScanIntervalIndex(doc["payload"]["scan_interval_index"]);
 
     // Need to restart scanning for interval update to work
     receiver->stopScan();
     receiver->startScan();
   }
   if (doc["payload"]["buzzer_index"].is<JsonVariant>()) {
-    settings->buzzerIndex.set(doc["payload"]["buzzer_index"]);
+    settings->setBuzzerIndex(doc["payload"]["buzzer_index"]);
   }
 #ifdef BATTERY_MONITORING
   if (doc["payload"]["battery_alarm_index"].is<JsonVariant>()) {
-    settings->batteryAlarmIndex.set(doc["payload"]["battery_alarm_index"]);
+    settings->setBatteryAlarmIndex(doc["payload"]["battery_alarm_index"]);
   }
 #endif
 
@@ -440,10 +440,10 @@ void UsbSerial::handlePostCalibration(JsonDocument &doc) {
 
   // Apply valid updates
   if (doc["payload"]["high_rssi"].is<JsonVariant>()) {
-    settings->highCalibratedRssi.set(newHigh);
+    settings->setHighCalibratedRssi(newHigh);
   }
   if (doc["payload"]["low_rssi"].is<JsonVariant>()) {
-    settings->lowCalibratedRssi.set(newLow);
+    settings->setLowCalibratedRssi(newLow);
   }
 
   JsonDocument resp;

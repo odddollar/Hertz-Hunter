@@ -66,3 +66,28 @@ void Settings::clearReset() {
   preferences.end();
   esp_restart();
 }
+
+// Update scan interval index
+void Settings::setScanIntervalIndex(int index) {
+  scanIntervalIndex.set(index);
+}
+
+// Update buzzer index
+void Settings::setBuzzerIndex(int index) {
+  buzzerIndex.set(index);
+}
+
+// Update battery alarm index
+void Settings::setBatteryAlarmIndex(int index) {
+  batteryAlarmIndex.set(index);
+}
+
+// Update low calibrated rssi
+void Settings::setLowCalibratedRssi(int value) {
+  lowCalibratedRssi.set(value);
+}
+
+// Update high calibrated rssi
+void Settings::setHighCalibratedRssi(int value) {
+  highCalibratedRssi.set(value);
+}

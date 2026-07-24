@@ -1,23 +1,16 @@
 #ifndef VARIABLE_H
 #define VARIABLE_H
 
-#include <Arduino.h>
-
 // Holds single value behind mutex so get and set are safe from any task
-template<typename T> class Variable {
+// Set access restricted to owning class
+template<typename T, typename Owner> class Variable {
 public:
   Variable(T initialValue = T())
     : value(initialValue) {
     mutex = xSemaphoreCreateMutex();
   }
 
-  virtual void set(T newValue) {
-    xSemaphoreTake(mutex, portMAX_DELAY);
-    value = newValue;
-    xSemaphoreGive(mutex);
-  }
-
-  virtual T get() const {
+  T get() const {
     xSemaphoreTake(mutex, portMAX_DELAY);
     T current = value;
     xSemaphoreGive(mutex);
@@ -27,22 +20,26 @@ public:
 protected:
   T value;
   SemaphoreHandle_t mutex;
+
+private:
+  virtual void set(T newValue) {
+    xSemaphoreTake(mutex, portMAX_DELAY);
+    value = newValue;
+    xSemaphoreGive(mutex);
+  }
+
+  friend Owner;
 };
 
 // Fixed size array of values behind single mutex covering whole array
-template<typename T, size_t N> class VariableArray {
+// Set access restricted to owning class
+template<typename T, size_t N, typename Owner> class VariableArray {
 public:
   VariableArray(T initialValue = T()) {
     mutex = xSemaphoreCreateMutex();
     for (size_t i = 0; i < N; i++) {
       values[i] = initialValue;
     }
-  }
-
-  void set(size_t index, T newValue) {
-    xSemaphoreTake(mutex, portMAX_DELAY);
-    values[index] = newValue;
-    xSemaphoreGive(mutex);
   }
 
   T get(size_t index) const {
@@ -57,19 +54,29 @@ public:
   }
 
 private:
+  void set(size_t index, T newValue) {
+    xSemaphoreTake(mutex, portMAX_DELAY);
+    values[index] = newValue;
+    xSemaphoreGive(mutex);
+  }
+
   T values[N];
   SemaphoreHandle_t mutex;
+
+  friend Owner;
 };
 
 // Variable that runs callback once value changes
 // Callback fires after mutex released so side effects don't hold lock
-template<typename T> class VariableCallback : public Variable<T> {
+// Set and callback registration both restricted to owning class
+template<typename T, typename Owner> class VariableCallback : public Variable<T, Owner> {
 public:
   using Callback = std::function<void(T)>;
 
   VariableCallback(T initialValue = T())
-    : Variable<T>(initialValue), callback(nullptr) {}
+    : Variable<T, Owner>(initialValue), callback(nullptr) {}
 
+private:
   void set(T newValue) override {
     bool changed = false;
 
@@ -87,8 +94,9 @@ public:
     callback = cb;
   }
 
-private:
   Callback callback;
+
+  friend Owner;
 };
 
 #endif

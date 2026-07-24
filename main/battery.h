@@ -20,7 +20,7 @@ public:
   void updateBatteryVoltage();
   bool lowBattery();
 
-  Variable<int> currentVoltage;
+  Variable<int, Battery> currentVoltage;
 
 private:
   uint8_t pin;

@@ -22,9 +22,10 @@ public:
   void startScan();
   void stopScan();
   void calibrate(bool high);
+  void setLowband(bool value);
 
-  VariableArray<int, MAX_FREQUENCIES_SCANNED> rssiValues;
-  Variable<bool> lowband;
+  VariableArray<int, MAX_FREQUENCIES_SCANNED, RX5808> rssiValues;
+  Variable<bool, RX5808> lowband;
 
 private:
   static void _scan(void *parameter);

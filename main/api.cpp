@@ -158,7 +158,7 @@ void Api::handlePostValues(AsyncWebServerRequest *request, uint8_t *data, size_t
   }
 
   // Update receiver lowband state
-  receiver->lowband.set(doc["lowband"]);
+  receiver->setLowband(doc["lowband"]);
 
   request->send(200, "application/json", "{\"status\":\"ok\"}");
 }
@@ -259,18 +259,18 @@ void Api::handlePostSettings(AsyncWebServerRequest *request, uint8_t *data, size
 
   // Apply valid updates
   if (doc["scan_interval_index"].is<JsonVariant>()) {
-    settings->scanIntervalIndex.set(doc["scan_interval_index"]);
+    settings->setScanIntervalIndex(doc["scan_interval_index"]);
 
     // Need to restart scanning for interval update to work
     receiver->stopScan();
     receiver->startScan();
   }
   if (doc["buzzer_index"].is<JsonVariant>()) {
-    settings->buzzerIndex.set(doc["buzzer_index"]);
+    settings->setBuzzerIndex(doc["buzzer_index"]);
   }
 #ifdef BATTERY_MONITORING
   if (doc["battery_alarm_index"].is<JsonVariant>()) {
-    settings->batteryAlarmIndex.set(doc["battery_alarm_index"]);
+    settings->setBatteryAlarmIndex(doc["battery_alarm_index"]);
   }
 #endif
 
@@ -352,10 +352,10 @@ void Api::handlePostCalibration(AsyncWebServerRequest *request, uint8_t *data, s
 
   // Apply valid updates
   if (doc["high_rssi"].is<JsonVariant>()) {
-    settings->highCalibratedRssi.set(newHigh);
+    settings->setHighCalibratedRssi(newHigh);
   }
   if (doc["low_rssi"].is<JsonVariant>()) {
-    settings->lowCalibratedRssi.set(newLow);
+    settings->setLowCalibratedRssi(newLow);
   }
 
   request->send(200, "application/json", "{\"status\":\"ok\"}");

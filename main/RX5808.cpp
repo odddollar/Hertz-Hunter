@@ -48,10 +48,15 @@ void RX5808::calibrate(bool high) {
 
   // Save rssi
   if (high) {
-    settings->highCalibratedRssi.set(readRSSI());
+    settings->setHighCalibratedRssi(readRSSI());
   } else {
-    settings->lowCalibratedRssi.set(readRSSI());
+    settings->setLowCalibratedRssi(readRSSI());
   }
+}
+
+// Update lowband state
+void RX5808::setLowband(bool value) {
+  lowband.set(value);
 }
 
 // Background task that runs scanning continuously

@@ -142,7 +142,7 @@ void Menu::handleButtons() {
         }
         break;
       case SCAN:  // Handle SELECT on scan menu
-        receiver->lowband.set(!receiver->lowband.get());
+        receiver->setLowband(!receiver->lowband.get());
         break;
       case SETTINGS:  // Handle SELECT on settings menu
         switch (menus[SETTINGS].menuIndex) {
@@ -161,14 +161,14 @@ void Menu::handleButtons() {
       case SCAN_INTERVAL ... BATTERY_ALARM:  // Handle SELECT on individual settings options
         switch (menuIndex) {
           case SCAN_INTERVAL:  // Update scan interval setting
-            settings->scanIntervalIndex.set(menus[SCAN_INTERVAL].menuIndex);
+            settings->setScanIntervalIndex(menus[SCAN_INTERVAL].menuIndex);
             menus[SCAN].menuIndex = 0;
             break;
           case BUZZER:  // Update buzzer setting
-            settings->buzzerIndex.set(menus[BUZZER].menuIndex);
+            settings->setBuzzerIndex(menus[BUZZER].menuIndex);
             break;
           case BATTERY_ALARM:  // Update battery alarm setting
-            settings->batteryAlarmIndex.set(menus[BATTERY_ALARM].menuIndex);
+            settings->setBatteryAlarmIndex(menus[BATTERY_ALARM].menuIndex);
             break;
         }
         break;

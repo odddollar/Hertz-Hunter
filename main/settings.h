@@ -20,15 +20,20 @@ public:
   void saveSettingsStorage(const char *key, int value);
   void loadSettingsStorage();
   void clearReset();
+  void setScanIntervalIndex(int index);
+  void setBuzzerIndex(int index);
+  void setBatteryAlarmIndex(int index);
+  void setLowCalibratedRssi(int value);
+  void setHighCalibratedRssi(int value);
 
-  VariableCallback<int> scanIntervalIndex;
-  Variable<float> scanInterval;  // Should not be directly set outside class
-  VariableCallback<int> buzzerIndex;
-  Variable<bool> buzzer;  // Should not be directly set outside class
-  VariableCallback<int> batteryAlarmIndex;
-  Variable<int> batteryAlarm;  // Should not be directly set outside class
-  VariableCallback<int> lowCalibratedRssi;
-  VariableCallback<int> highCalibratedRssi;
+  VariableCallback<int, Settings> scanIntervalIndex;
+  Variable<float, Settings> scanInterval;
+  VariableCallback<int, Settings> buzzerIndex;
+  Variable<bool, Settings> buzzer;
+  VariableCallback<int, Settings> batteryAlarmIndex;
+  Variable<int, Settings> batteryAlarm;
+  VariableCallback<int, Settings> lowCalibratedRssi;
+  VariableCallback<int, Settings> highCalibratedRssi;
 
 private:
   bool initialReadDone;
