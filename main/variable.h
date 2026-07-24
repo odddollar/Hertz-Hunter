@@ -1,32 +1,68 @@
 #ifndef VARIABLE_H
 #define VARIABLE_H
 
-// Declare classes to friend them
-class Battery;
-class RX5808;
-class Settings;
+#include <Arduino.h>
 
-// Base Variable class with get() and set() access
+// Holds single value behind mutex so get and set are safe from any task
 template<typename T> class Variable {
 public:
   Variable(T initialValue = T())
-    : value(initialValue) {}
+    : value(initialValue) {
+    mutex = xSemaphoreCreateMutex();
+  }
 
   virtual void set(T newValue) {
+    xSemaphoreTake(mutex, portMAX_DELAY);
     value = newValue;
+    xSemaphoreGive(mutex);
   }
 
   virtual T get() const {
-    return value;
+    xSemaphoreTake(mutex, portMAX_DELAY);
+    T current = value;
+    xSemaphoreGive(mutex);
+    return current;
   }
 
 protected:
   T value;
+  SemaphoreHandle_t mutex;
 };
 
-// Variable that runs callback function when value changed
-// Most useful for settings variables that need to have side effect when updated
-// Callback only called when value changes
+// Fixed size array of values behind single mutex covering whole array
+template<typename T, size_t N> class VariableArray {
+public:
+  VariableArray(T initialValue = T()) {
+    mutex = xSemaphoreCreateMutex();
+    for (size_t i = 0; i < N; i++) {
+      values[i] = initialValue;
+    }
+  }
+
+  void set(size_t index, T newValue) {
+    xSemaphoreTake(mutex, portMAX_DELAY);
+    values[index] = newValue;
+    xSemaphoreGive(mutex);
+  }
+
+  T get(size_t index) const {
+    xSemaphoreTake(mutex, portMAX_DELAY);
+    T current = values[index];
+    xSemaphoreGive(mutex);
+    return current;
+  }
+
+  size_t length() const {
+    return N;
+  }
+
+private:
+  T values[N];
+  SemaphoreHandle_t mutex;
+};
+
+// Variable that runs callback once value changes
+// Callback fires after mutex released so side effects don't hold lock
 template<typename T> class VariableCallback : public Variable<T> {
 public:
   using Callback = std::function<void(T)>;
@@ -35,65 +71,24 @@ public:
     : Variable<T>(initialValue), callback(nullptr) {}
 
   void set(T newValue) override {
+    bool changed = false;
+
+    xSemaphoreTake(this->mutex, portMAX_DELAY);
     if (newValue != this->value) {
       this->value = newValue;
-      if (callback) callback(this->value);
+      changed = true;
     }
+    xSemaphoreGive(this->mutex);
+
+    if (changed && callback) callback(newValue);
   }
 
-private:
   void onChange(Callback cb) {
     callback = cb;
   }
 
+private:
   Callback callback;
-
-  // Allow Settings to access onChange()
-  friend class Settings;
-};
-
-// Variable with restricted set() access
-template<typename T> class VariableRestricted : public Variable<T> {
-public:
-  VariableRestricted(T initialValue = T())
-    : Variable<T>(initialValue) {}
-
-private:
-  void set(T newValue) override {
-    this->value = newValue;
-  }
-
-  // Allow classes to access set()
-  friend class Battery;
-  friend class Settings;
-};
-
-// Array variable with restricted set() access
-template<typename T, size_t N> class VariableArrayRestricted {
-public:
-  VariableArrayRestricted(T initialValue = T()) {
-    for (size_t i = 0; i < N; i++) {
-      values[i] = initialValue;
-    }
-  }
-
-  T get(size_t index) const {
-    return values[index];
-  }
-
-  size_t length() const {
-    return N;
-  }
-
-private:
-  void set(size_t index, T newValue) {
-    values[index] = newValue;
-  }
-
-  T values[N];
-
-  // Allow classes to access set()
-  friend class RX5808;
 };
 
 #endif

@@ -204,10 +204,8 @@ void UsbSerial::handleGetValues() {
   doc["event"] = "get";
   doc["location"] = "values";
 
-  // Safely get lowband state
-  xSemaphoreTake(receiver->lowbandMutex, portMAX_DELAY);
+  // Get lowband state
   bool lowband = receiver->lowband.get();
-  xSemaphoreGive(receiver->lowbandMutex);
 
   // Payload object
   JsonObject payload = doc["payload"].to<JsonObject>();
@@ -219,9 +217,7 @@ void UsbSerial::handleGetValues() {
   payload["max_frequency"] = min_freq + SCAN_FREQUENCY_RANGE;
 
   // Calculate number of scanned values based off interval
-  xSemaphoreTake(settings->settingsMutex, portMAX_DELAY);
   float interval = settings->scanInterval.get();
-  xSemaphoreGive(settings->settingsMutex);
   int numScannedValues = (SCAN_FREQUENCY_RANGE / interval) + 1;  // +1 for final number inclusion
 
   // Create values array in payload
@@ -229,10 +225,7 @@ void UsbSerial::handleGetValues() {
 
   // Get receiver values
   for (int i = 0; i < numScannedValues; i++) {
-    int rssi;
-    xSemaphoreTake(receiver->scanMutex, portMAX_DELAY);
-    rssi = receiver->rssiValues.get(i);
-    xSemaphoreGive(receiver->scanMutex);
+    int rssi = receiver->rssiValues.get(i);
 
     values.add(rssi);
   }
@@ -255,9 +248,7 @@ void UsbSerial::handlePostValues(JsonDocument &doc) {
   }
 
   // Update receiver lowband state
-  xSemaphoreTake(receiver->lowbandMutex, portMAX_DELAY);
   receiver->lowband.set(doc["payload"]["lowband"]);
-  xSemaphoreGive(receiver->lowbandMutex);
 
   JsonDocument resp;
 
@@ -280,7 +271,6 @@ void UsbSerial::handleGetSettings() {
   doc["event"] = "get";
   doc["location"] = "settings";
 
-  xSemaphoreTake(settings->settingsMutex, portMAX_DELAY);
   doc["payload"]["scan_interval_index"] = settings->scanIntervalIndex.get();
   doc["payload"]["scan_interval"] = settings->scanInterval.get();
   doc["payload"]["buzzer_index"] = settings->buzzerIndex.get();
@@ -289,7 +279,6 @@ void UsbSerial::handleGetSettings() {
   doc["payload"]["battery_alarm_index"] = settings->batteryAlarmIndex.get();
   doc["payload"]["battery_alarm"] = settings->batteryAlarm.get();
 #endif
-  xSemaphoreGive(settings->settingsMutex);
 
   sendJson(doc);
 }
@@ -359,24 +348,18 @@ void UsbSerial::handlePostSettings(JsonDocument &doc) {
 
   // Apply valid updates
   if (doc["payload"]["scan_interval_index"].is<JsonVariant>()) {
-    xSemaphoreTake(settings->settingsMutex, portMAX_DELAY);
     settings->scanIntervalIndex.set(doc["payload"]["scan_interval_index"]);
-    xSemaphoreGive(settings->settingsMutex);
 
     // Need to restart scanning for interval update to work
     receiver->stopScan();
     receiver->startScan();
   }
   if (doc["payload"]["buzzer_index"].is<JsonVariant>()) {
-    xSemaphoreTake(settings->settingsMutex, portMAX_DELAY);
     settings->buzzerIndex.set(doc["payload"]["buzzer_index"]);
-    xSemaphoreGive(settings->settingsMutex);
   }
 #ifdef BATTERY_MONITORING
   if (doc["payload"]["battery_alarm_index"].is<JsonVariant>()) {
-    xSemaphoreTake(settings->settingsMutex, portMAX_DELAY);
     settings->batteryAlarmIndex.set(doc["payload"]["battery_alarm_index"]);
-    xSemaphoreGive(settings->settingsMutex);
   }
 #endif
 
@@ -401,10 +384,8 @@ void UsbSerial::handleGetCalibration() {
   doc["event"] = "get";
   doc["location"] = "calibration";
 
-  xSemaphoreTake(settings->settingsMutex, portMAX_DELAY);
   doc["payload"]["low_rssi"] = settings->lowCalibratedRssi.get();
   doc["payload"]["high_rssi"] = settings->highCalibratedRssi.get();
-  xSemaphoreGive(settings->settingsMutex);
 
   sendJson(doc);
 }
@@ -421,11 +402,9 @@ void UsbSerial::handlePostCalibration(JsonDocument &doc) {
     }
   }
 
-  // Safely get calibrated rssi values
-  xSemaphoreTake(settings->settingsMutex, portMAX_DELAY);
+  // Get calibrated rssi values
   int newHigh = settings->highCalibratedRssi.get();
   int newLow = settings->lowCalibratedRssi.get();
-  xSemaphoreGive(settings->settingsMutex);
 
   // Validate type and value of high_rssi
   if (doc["payload"]["high_rssi"].is<JsonVariant>()) {
@@ -461,14 +440,10 @@ void UsbSerial::handlePostCalibration(JsonDocument &doc) {
 
   // Apply valid updates
   if (doc["payload"]["high_rssi"].is<JsonVariant>()) {
-    xSemaphoreTake(settings->settingsMutex, portMAX_DELAY);
     settings->highCalibratedRssi.set(newHigh);
-    xSemaphoreGive(settings->settingsMutex);
   }
   if (doc["payload"]["low_rssi"].is<JsonVariant>()) {
-    xSemaphoreTake(settings->settingsMutex, portMAX_DELAY);
     settings->lowCalibratedRssi.set(newLow);
-    xSemaphoreGive(settings->settingsMutex);
   }
 
   JsonDocument resp;
@@ -490,9 +465,7 @@ void UsbSerial::handleGetBattery() {
   doc["event"] = "get";
   doc["location"] = "battery";
 
-  xSemaphoreTake(battery->batteryMutex, portMAX_DELAY);
   doc["payload"]["voltage"] = battery->currentVoltage.get();
-  xSemaphoreGive(battery->batteryMutex);
 
   sendJson(doc);
 }

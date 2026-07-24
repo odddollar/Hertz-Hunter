@@ -20,9 +20,7 @@ public:
   void updateBatteryVoltage();
   bool lowBattery();
 
-  VariableRestricted<int> currentVoltage;
-
-  SemaphoreHandle_t batteryMutex;
+  Variable<int> currentVoltage;
 
 private:
   uint8_t pin;

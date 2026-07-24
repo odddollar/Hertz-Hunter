@@ -22,15 +22,13 @@ public:
   void clearReset();
 
   VariableCallback<int> scanIntervalIndex;
-  VariableRestricted<float> scanInterval;  // Should not be directly set outside class
+  Variable<float> scanInterval;  // Should not be directly set outside class
   VariableCallback<int> buzzerIndex;
-  VariableRestricted<bool> buzzer;  // Should not be directly set outside class
+  Variable<bool> buzzer;  // Should not be directly set outside class
   VariableCallback<int> batteryAlarmIndex;
-  VariableRestricted<int> batteryAlarm;  // Should not be directly set outside class
+  Variable<int> batteryAlarm;  // Should not be directly set outside class
   VariableCallback<int> lowCalibratedRssi;
   VariableCallback<int> highCalibratedRssi;
-
-  SemaphoreHandle_t settingsMutex;
 
 private:
   bool initialReadDone;

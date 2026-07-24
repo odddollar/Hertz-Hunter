@@ -63,9 +63,7 @@ void Menu::doEncoder() {
 // Manipulates internal menuIndex variable
 void Menu::handleButtons() {
   // Update length of scan menu
-  xSemaphoreTake(settings->settingsMutex, portMAX_DELAY);
   menus[SCAN].menuItemsLength = (SCAN_FREQUENCY_RANGE / settings->scanInterval.get()) + 1;  // +1 for final number inclusion
-  xSemaphoreGive(settings->settingsMutex);
 
 #ifdef ROTARY_ENCODER_INPUT
   int selectPressed = !digitalRead(select_pin);
@@ -77,9 +75,7 @@ void Menu::handleButtons() {
       menus[menuIndex].menuIndex = (menus[menuIndex].menuIndex + (last_dial_pos - dial_pos) + menus[menuIndex].menuItemsLength) % menus[menuIndex].menuItemsLength;
 
       // Sound buzzer if necessary
-      xSemaphoreTake(settings->settingsMutex, portMAX_DELAY);
       if (settings->buzzer.get()) buzzer->buzz();
-      xSemaphoreGive(settings->settingsMutex);
 
       last_dial_pos = dial_pos;
     }
@@ -100,9 +96,7 @@ void Menu::handleButtons() {
     menus[menuIndex].menuIndex = (menus[menuIndex].menuIndex + direction + menus[menuIndex].menuItemsLength) % menus[menuIndex].menuItemsLength;
 
     // Sound buzzer on button press if necessary
-    xSemaphoreTake(settings->settingsMutex, portMAX_DELAY);
     if (settings->buzzer.get()) buzzer->buzz();
-    xSemaphoreGive(settings->settingsMutex);
 
     // Delay for button debouncing
     delay(DEBOUNCE_DELAY);
@@ -115,9 +109,7 @@ void Menu::handleButtons() {
       selectButtonPressTime = millis();
 
       // Sound buzzer on button press if necessary
-      xSemaphoreTake(settings->settingsMutex, portMAX_DELAY);
       if (settings->buzzer.get()) buzzer->buzz();
-      xSemaphoreGive(settings->settingsMutex);
     } else if (!selectButtonHeld && millis() - selectButtonPressTime > LONG_PRESS_DURATION) {  // Held longer than threshold register long press
       switch (menuIndex) {
         case MAIN: menuIndex = ADVANCED; break;                             // If on main menu, go to advanced
@@ -129,9 +121,7 @@ void Menu::handleButtons() {
       selectButtonHeld = true;
 
       // Sound double buzz on back if necessary
-      xSemaphoreTake(settings->settingsMutex, portMAX_DELAY);
       if (settings->buzzer.get()) buzzer->doubleBuzz();
-      xSemaphoreGive(settings->settingsMutex);
     }
 
     // Delay for button debouncing
@@ -152,9 +142,7 @@ void Menu::handleButtons() {
         }
         break;
       case SCAN:  // Handle SELECT on scan menu
-        xSemaphoreTake(receiver->lowbandMutex, portMAX_DELAY);
         receiver->lowband.set(!receiver->lowband.get());
-        xSemaphoreGive(receiver->lowbandMutex);
         break;
       case SETTINGS:  // Handle SELECT on settings menu
         switch (menus[SETTINGS].menuIndex) {
@@ -173,20 +161,14 @@ void Menu::handleButtons() {
       case SCAN_INTERVAL ... BATTERY_ALARM:  // Handle SELECT on individual settings options
         switch (menuIndex) {
           case SCAN_INTERVAL:  // Update scan interval setting
-            xSemaphoreTake(settings->settingsMutex, portMAX_DELAY);
             settings->scanIntervalIndex.set(menus[SCAN_INTERVAL].menuIndex);
-            xSemaphoreGive(settings->settingsMutex);
             menus[SCAN].menuIndex = 0;
             break;
           case BUZZER:  // Update buzzer setting
-            xSemaphoreTake(settings->settingsMutex, portMAX_DELAY);
             settings->buzzerIndex.set(menus[BUZZER].menuIndex);
-            xSemaphoreGive(settings->settingsMutex);
             break;
           case BATTERY_ALARM:  // Update battery alarm setting
-            xSemaphoreTake(settings->settingsMutex, portMAX_DELAY);
             settings->batteryAlarmIndex.set(menus[BATTERY_ALARM].menuIndex);
-            xSemaphoreGive(settings->settingsMutex);
             break;
         }
         break;
@@ -226,11 +208,9 @@ void Menu::drawMenu() {
 
   // Update in-memory icons for individual settings options
   if (menuIndex >= SCAN_INTERVAL && menuIndex <= BATTERY_ALARM) {
-    xSemaphoreTake(settings->settingsMutex, portMAX_DELAY);
     updateSettingsOptionIcons(&menus[SCAN_INTERVAL], settings->scanIntervalIndex.get());
     updateSettingsOptionIcons(&menus[BUZZER], settings->buzzerIndex.get());
     updateSettingsOptionIcons(&menus[BATTERY_ALARM], settings->batteryAlarmIndex.get());
-    xSemaphoreGive(settings->settingsMutex);
   }
 
   // Call appropriate draw function
@@ -312,9 +292,7 @@ void Menu::drawSelectionMenu() {
 // Draw graph of scanned rssi values
 void Menu::drawScanMenu() {
   // Calculate number of scanned values based off of interval
-  xSemaphoreTake(settings->settingsMutex, portMAX_DELAY);
   float interval = settings->scanInterval.get();
-  xSemaphoreGive(settings->settingsMutex);
   int numScannedValues = (SCAN_FREQUENCY_RANGE / interval) + 1;  // +1 for final number inclusion
 
   // Calculate width of each bar in graph by expanding until best fit
@@ -327,15 +305,11 @@ void Menu::drawScanMenu() {
   int padding = (int)floor((DISPLAY_WIDTH - (barWidth * numScannedValues)) / 2);
 
   // Get min and max calibrated rssi
-  xSemaphoreTake(settings->settingsMutex, portMAX_DELAY);
   int minRssi = settings->lowCalibratedRssi.get();
   int maxRssi = settings->highCalibratedRssi.get();
-  xSemaphoreGive(settings->settingsMutex);
 
-  // Safely get lowband state
-  xSemaphoreTake(receiver->lowbandMutex, portMAX_DELAY);
+  // Get lowband state
   bool lowband = receiver->lowband.get();
-  xSemaphoreGive(receiver->lowbandMutex);
 
   // Draw bottom numbers
   u8g2.setFont(u8g2_font_5x7_tf);
@@ -363,11 +337,8 @@ void Menu::drawScanMenu() {
   snprintf(currentFrequency, sizeof(currentFrequency), "%dMHz", (int)round(menus[SCAN].menuIndex * interval + min_freq));
   u8g2.drawStr(textCentreX(currentFrequency, 7), 13, currentFrequency);
 
-  // Safely get current rssi
-  int currentFrequencyRssi;
-  xSemaphoreTake(receiver->scanMutex, portMAX_DELAY);
-  currentFrequencyRssi = receiver->rssiValues.get(menus[SCAN].menuIndex);
-  xSemaphoreGive(receiver->scanMutex);
+  // Get current rssi
+  int currentFrequencyRssi = receiver->rssiValues.get(menus[SCAN].menuIndex);
 
   // Clamp and convert rssi to percentage
   currentFrequencyRssi = std::clamp(currentFrequencyRssi, minRssi, maxRssi);
@@ -380,11 +351,8 @@ void Menu::drawScanMenu() {
 
   // Iterate through rssi values
   for (int i = 0; i < numScannedValues; i++) {
-    // Safely get current rssi
-    int rssi;
-    xSemaphoreTake(receiver->scanMutex, portMAX_DELAY);
-    rssi = receiver->rssiValues.get(i);
-    xSemaphoreGive(receiver->scanMutex);
+    // Get current rssi
+    int rssi = receiver->rssiValues.get(i);
 
     // Clamp rssi between calibrated values
     rssi = std::clamp(rssi, minRssi, maxRssi);

@@ -18,10 +18,6 @@ RX5808::RX5808(uint8_t data, uint8_t le, uint8_t clk, uint8_t rssi, Settings *s)
   digitalWrite(lePin, HIGH);
   digitalWrite(clkPin, LOW);
 
-  // Create mutexes
-  scanMutex = xSemaphoreCreateMutex();
-  lowbandMutex = xSemaphoreCreateMutex();
-
   // Reset receiver
   reset();
 }
@@ -52,13 +48,9 @@ void RX5808::calibrate(bool high) {
 
   // Save rssi
   if (high) {
-    xSemaphoreTake(settings->settingsMutex, portMAX_DELAY);
     settings->highCalibratedRssi.set(readRSSI());
-    xSemaphoreGive(settings->settingsMutex);
   } else {
-    xSemaphoreTake(settings->settingsMutex, portMAX_DELAY);
     settings->lowCalibratedRssi.set(readRSSI());
-    xSemaphoreGive(settings->settingsMutex);
   }
 }
 
@@ -68,9 +60,7 @@ void RX5808::_scan(void *parameter) {
   RX5808 *receiver = static_cast<RX5808 *>(parameter);
 
   // Get interval at which to scan
-  xSemaphoreTake(receiver->settings->settingsMutex, portMAX_DELAY);
   float interval = receiver->settings->scanInterval.get();
-  xSemaphoreGive(receiver->settings->settingsMutex);
 
   // Calculate number of values to scan
   int numScannedValues = (SCAN_FREQUENCY_RANGE / interval) + 1;  // +1 for final number inclusion
@@ -79,13 +69,11 @@ void RX5808::_scan(void *parameter) {
   // Stops when scanning task cancelled
   while (!receiver->stopRequested) {
     for (int i = 0; i < numScannedValues; i++) {
-      // Safely stop scanning when no mutexes taken
+      // Stop scanning as soon as requested
       if (receiver->stopRequested) break;
 
-      // Safely get lowband state
-      xSemaphoreTake(receiver->lowbandMutex, portMAX_DELAY);
+      // Get lowband state
       bool lowband = receiver->lowband.get();
-      xSemaphoreGive(receiver->lowbandMutex);
 
       // Get minimum frequency to support changing to lowband
       int min_freq = lowband ? LOWBAND_MIN_FREQUENCY : HIGHBAND_MIN_FREQUENCY;
@@ -96,14 +84,11 @@ void RX5808::_scan(void *parameter) {
       // Give time for rssi to stabilise
       vTaskDelay(pdMS_TO_TICKS(RSSI_STABILISATION_TIME));
 
-      // Safely stop scanning when no mutexes taken
+      // Stop scanning as soon as requested
       // Second call in case task cancelled during delay
       if (receiver->stopRequested) break;
 
-      // Take mutex to safely modify data in this task
-      xSemaphoreTake(receiver->scanMutex, portMAX_DELAY);
       receiver->rssiValues.set(i, receiver->readRSSI());
-      xSemaphoreGive(receiver->scanMutex);
     }
   }
 

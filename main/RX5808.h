@@ -23,11 +23,8 @@ public:
   void stopScan();
   void calibrate(bool high);
 
-  VariableArrayRestricted<int, MAX_FREQUENCIES_SCANNED> rssiValues;
+  VariableArray<int, MAX_FREQUENCIES_SCANNED> rssiValues;
   Variable<bool> lowband;
-
-  SemaphoreHandle_t scanMutex;
-  SemaphoreHandle_t lowbandMutex;
 
 private:
   static void _scan(void *parameter);
