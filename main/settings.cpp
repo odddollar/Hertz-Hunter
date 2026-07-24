@@ -47,11 +47,11 @@ void Settings::saveSettingsStorage(const char *key, int value) {
 // Load all settings from memory
 void Settings::loadSettingsStorage() {
   preferences.begin("settings", true);
-  scanIntervalIndex.set(preferences.getInt("s_i_index", DEFAULT_INDEX));
-  buzzerIndex.set(preferences.getInt("b_index", DEFAULT_INDEX));
-  batteryAlarmIndex.set(preferences.getInt("b_a_index", DEFAULT_INDEX));
-  lowCalibratedRssi.set(preferences.getInt("l_c_rssi", DEFAULT_LOW_CALIBRATED_RSSI));
-  highCalibratedRssi.set(preferences.getInt("h_c_rssi", DEFAULT_HIGH_CALIBRATED_RSSI));
+  setScanIntervalIndex(preferences.getInt("s_i_index", DEFAULT_INDEX));
+  setBuzzerIndex(preferences.getInt("b_index", DEFAULT_INDEX));
+  setBatteryAlarmIndex(preferences.getInt("b_a_index", DEFAULT_INDEX));
+  setLowCalibratedRssi(preferences.getInt("l_c_rssi", DEFAULT_LOW_CALIBRATED_RSSI));
+  setHighCalibratedRssi(preferences.getInt("h_c_rssi", DEFAULT_HIGH_CALIBRATED_RSSI));
   preferences.end();
 
   // Used to prevent reading from non-volatile memory, updating variables, then immediately writing same value
@@ -69,25 +69,35 @@ void Settings::clearReset() {
 
 // Update scan interval index
 void Settings::setScanIntervalIndex(int index) {
+  if (index < 0) index = 0;
+  if (index > 2) index = 2;
   scanIntervalIndex.set(index);
 }
 
 // Update buzzer index
 void Settings::setBuzzerIndex(int index) {
+  if (index < 0) index = 0;
+  if (index > 1) index = 1;
   buzzerIndex.set(index);
 }
 
 // Update battery alarm index
 void Settings::setBatteryAlarmIndex(int index) {
+  if (index < 0) index = 0;
+  if (index > 2) index = 2;
   batteryAlarmIndex.set(index);
 }
 
 // Update low calibrated rssi
 void Settings::setLowCalibratedRssi(int value) {
+  if (value < 0) value = 0;
+  if (value > 4095) value = 4095;
   lowCalibratedRssi.set(value);
 }
 
 // Update high calibrated rssi
 void Settings::setHighCalibratedRssi(int value) {
+  if (value < 0) value = 0;
+  if (value > 4095) value = 4095;
   highCalibratedRssi.set(value);
 }
