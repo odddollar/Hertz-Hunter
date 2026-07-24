@@ -101,7 +101,7 @@ void Api::handleNotFound(AsyncWebServerRequest *request) {
 }
 
 // Enpoint for getting scanned values
-// These values aren't actual rssi values, rather the analog-to-digital converter reading
+// These values aren't actual rssi values, rather raw analog-to-digital converter reading
 // Will be within a range of 0 to 4095 inclusive
 void Api::handleGetValues(AsyncWebServerRequest *request) {
   JsonDocument doc;
@@ -295,8 +295,8 @@ void Api::handlePostSettings(AsyncWebServerRequest *request, uint8_t *data, size
 }
 
 // Endpoint for getting current calibration values
-// Returns in the form of { low_value, high_value }
-// These values aren't actual rssi values, rather the analog-to-digital converter reading
+// Returns in form of { low_value, high_value }
+// These values aren't actual rssi values, rather raw analog-to-digital converter reading
 // Will be within a range of 0 to 4095 inclusive
 void Api::handleGetCalibration(AsyncWebServerRequest *request) {
   JsonDocument doc;

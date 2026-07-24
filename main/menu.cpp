@@ -60,7 +60,7 @@ void Menu::doEncoder() {
 }
 
 // Handle navigation between menus
-// Manipulates the internal menuIndex variable
+// Manipulates internal menuIndex variable
 void Menu::handleButtons() {
   // Update length of scan menu
   xSemaphoreTake(settings->settingsMutex, portMAX_DELAY);

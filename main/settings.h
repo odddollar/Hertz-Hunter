@@ -13,7 +13,7 @@
 #define DEFAULT_LOW_CALIBRATED_RSSI 0
 #define DEFAULT_HIGH_CALIBRATED_RSSI 4095
 
-// Holds the state for the settings and handles updates to options
+// Holds state for settings and handles updates to options
 class Settings {
 public:
   Settings();
