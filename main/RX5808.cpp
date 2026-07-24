@@ -64,7 +64,8 @@ void RX5808::_scan(void *parameter) {
   // Static cast weirdness to access parameters
   RX5808 *receiver = static_cast<RX5808 *>(parameter);
 
-  // Get interval at which to scan
+  // Interval read once at task start
+  // Changing scanInterval requires stopping and restarting scan task
   float interval = receiver->settings->scanInterval.get();
 
   // Calculate number of values to scan
