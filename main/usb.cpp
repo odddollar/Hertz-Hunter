@@ -8,6 +8,7 @@ UsbSerial::UsbSerial(Settings *s, RX5808 *r)
   : settings(s), receiver(r)
 #endif
 {
+  serialOn = false;
   serialBufferPos = 0;
   serialBufferOverflow = false;
 }

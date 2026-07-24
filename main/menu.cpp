@@ -237,18 +237,25 @@ void Menu::drawMenu() {
   switch (menuIndex) {
     case SCAN:  // Draw scan menu
       receiver->startScan();
+      api->stopWifi();
+      usb->flushIncoming();
       drawScanMenu();
       break;
     case ABOUT:  // Draw about menu
+      receiver->stopScan();
+      api->stopWifi();
+      usb->flushIncoming();
       drawAboutMenu();
       break;
     case WIFI:  // Draw Wi-Fi menu
       receiver->startScan();
       api->startWifi();
+      usb->flushIncoming();
       drawWifiMenu();
       break;
     case USB_SERIAL:  // Draw serial menu
       receiver->startScan();
+      api->stopWifi();
       usb->listen();
       drawSerialMenu();
       break;
