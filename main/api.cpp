@@ -199,6 +199,12 @@ void Api::handlePostSettings(AsyncWebServerRequest *request, uint8_t *data, size
     return;
   }
 
+  // Payload can't be empty
+  if (doc.size() == 0) {
+    request->send(400, "application/json", "{\"status\":\"error\", \"payload\":\"'payload' object must contain at least one key\"}");
+    return;
+  }
+
 #ifdef BATTERY_MONITORING
   // Only scan_interval_index, buzzer_index and battery_alarm_index keys allowed
   for (JsonPair kv : doc.as<JsonObject>()) {
@@ -302,6 +308,12 @@ void Api::handlePostCalibration(AsyncWebServerRequest *request, uint8_t *data, s
   DeserializationError error = deserializeJson(doc, data, len);
   if (error) {
     request->send(400, "application/json", "{\"status\":\"error\", \"payload\":\"invalid JSON\"}");
+    return;
+  }
+
+  // Payload can't be empty
+  if (doc.size() == 0) {
+    request->send(400, "application/json", "{\"status\":\"error\", \"payload\":\"'payload' object must contain at least one key\"}");
     return;
   }
 
