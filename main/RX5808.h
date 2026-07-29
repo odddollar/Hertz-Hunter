@@ -41,7 +41,7 @@ private:
   uint8_t clkPin;
   uint8_t rssiPin;
 
-  TaskHandle_t scanHandle;
+  volatile TaskHandle_t scanHandle;
   volatile bool stopRequested;
 
   Settings *settings;

@@ -26,7 +26,10 @@ RX5808::RX5808(uint8_t data, uint8_t le, uint8_t clk, uint8_t rssi, Settings *s)
 void RX5808::startScan() {
   // Start scanning task only if not already running
   if (scanHandle == NULL) {
-    xTaskCreate(_scan, "scan", SCAN_STACK_SIZE, this, 1, &scanHandle);
+    // Create non-volatile TaskHandle_t for xTaskCreate
+    TaskHandle_t newHandle;
+    xTaskCreate(_scan, "scan", SCAN_STACK_SIZE, this, 1, &newHandle);
+    scanHandle = newHandle;
   }
 }
 
