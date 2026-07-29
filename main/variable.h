@@ -60,6 +60,11 @@ public:
 
 private:
   void set(size_t index, T newValue) {
+    // Clamp index to valid range
+    if (index >= N) {
+      index = N - 1;
+    }
+
     xSemaphoreTake(mutex, portMAX_DELAY);
     values[index] = newValue;
     xSemaphoreGive(mutex);
