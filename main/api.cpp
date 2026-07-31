@@ -201,7 +201,7 @@ void Api::handlePostSettings(AsyncWebServerRequest *request, uint8_t *data, size
 
   // Payload can't be empty
   if (doc.size() == 0) {
-    request->send(400, "application/json", "{\"status\":\"error\", \"payload\":\"'payload' object must contain at least one key\"}");
+    request->send(400, "application/json", "{\"status\":\"error\", \"payload\":\"request body must contain at least one key\"}");
     return;
   }
 
@@ -313,7 +313,7 @@ void Api::handlePostCalibration(AsyncWebServerRequest *request, uint8_t *data, s
 
   // Payload can't be empty
   if (doc.size() == 0) {
-    request->send(400, "application/json", "{\"status\":\"error\", \"payload\":\"'payload' object must contain at least one key\"}");
+    request->send(400, "application/json", "{\"status\":\"error\", \"payload\":\"request body must contain at least one key\"}");
     return;
   }
 
