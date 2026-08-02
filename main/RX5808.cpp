@@ -67,37 +67,48 @@ void RX5808::_scan(void *parameter) {
   // Static cast weirdness to access parameters
   RX5808 *receiver = static_cast<RX5808 *>(parameter);
 
-  // Interval read once at task start
-  // Changing scanInterval requires stopping and restarting scan task
-  float interval = receiver->settings->scanInterval.get();
-
-  // Calculate number of values to scan
-  int numScannedValues = (SCAN_FREQUENCY_RANGE / interval) + 1;  // +1 for final number inclusion
+  // Keep track of interval changes
+  float lastInterval = receiver->settings->scanInterval.get();
+  int numScannedValues = (SCAN_FREQUENCY_RANGE / lastInterval) + 1;
+  int i = 0;
 
   // Loop continuously
   // Stops when scanning task cancelled
   while (!receiver->stopRequested) {
-    for (int i = 0; i < numScannedValues; i++) {
-      // Stop scanning as soon as requested
-      if (receiver->stopRequested) break;
+    // Check for interval change then restart from beginning
+    float interval = receiver->settings->scanInterval.get();
+    if (interval != lastInterval) {
+      lastInterval = interval;
+      numScannedValues = (SCAN_FREQUENCY_RANGE / interval) + 1;
+      i = 0;
+    }
 
-      // Get lowband state
-      bool lowband = receiver->lowband.get();
+    // Get lowband state
+    bool lowband = receiver->lowband.get();
 
-      // Get minimum frequency to support changing to lowband
-      int min_freq = lowband ? LOWBAND_MIN_FREQUENCY : HIGHBAND_MIN_FREQUENCY;
+    // Get minimum frequency to support changing to lowband
+    int min_freq = lowband ? LOWBAND_MIN_FREQUENCY : HIGHBAND_MIN_FREQUENCY;
 
-      // Set frequency and offset by minimum
-      receiver->setFrequency((int)round(i * interval + min_freq));
+    // Stop scanning as soon as requested
+    if (receiver->stopRequested) break;
 
-      // Give time for rssi to stabilise
-      vTaskDelay(pdMS_TO_TICKS(RSSI_STABILISATION_TIME));
+    // Set frequency and offset by minimum
+    receiver->setFrequency((int)round(i * interval + min_freq));
 
-      // Stop scanning as soon as requested
-      // Second call in case task cancelled during delay
-      if (receiver->stopRequested) break;
+    // Give time for rssi to stabilise
+    vTaskDelay(pdMS_TO_TICKS(RSSI_STABILISATION_TIME));
 
-      receiver->rssiValues.set(i, receiver->readRSSI());
+    // Stop scanning as soon as requested
+    // Second call in case task cancelled during delay
+    if (receiver->stopRequested) break;
+
+    // Get rssi value
+    receiver->rssiValues.set(i, receiver->readRSSI());
+
+    // Restart on completed sweep
+    i++;
+    if (i >= numScannedValues) {
+      i = 0;
     }
   }
 

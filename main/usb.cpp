@@ -349,10 +349,6 @@ void UsbSerial::handlePostSettings(JsonDocument &doc) {
   // Apply valid updates
   if (doc["payload"]["scan_interval_index"].is<JsonVariant>()) {
     settings->setScanIntervalIndex(doc["payload"]["scan_interval_index"]);
-
-    // Need to restart scanning for interval update to work
-    receiver->stopScan();
-    receiver->startScan();
   }
   if (doc["payload"]["buzzer_index"].is<JsonVariant>()) {
     settings->setBuzzerIndex(doc["payload"]["buzzer_index"]);

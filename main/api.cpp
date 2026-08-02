@@ -266,10 +266,6 @@ void Api::handlePostSettings(AsyncWebServerRequest *request, uint8_t *data, size
   // Apply valid updates
   if (doc["scan_interval_index"].is<JsonVariant>()) {
     settings->setScanIntervalIndex(doc["scan_interval_index"]);
-
-    // Need to restart scanning for interval update to work
-    receiver->stopScan();
-    receiver->startScan();
   }
   if (doc["buzzer_index"].is<JsonVariant>()) {
     settings->setBuzzerIndex(doc["buzzer_index"]);
