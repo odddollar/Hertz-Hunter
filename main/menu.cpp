@@ -1,4 +1,3 @@
-#include <string.h>
 #include "menu.h"
 
 // Initialise static instance pointer
